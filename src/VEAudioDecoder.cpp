@@ -1,10 +1,8 @@
 #include"VEAudioDecoder.h"
 
 VEAudioDecoder::VEAudioDecoder(){
-    mVideoCtx = nullptr;
+    mAudioCtx = nullptr;
     mMediaInfo = nullptr;
-    mFrame = nullptr;
-    mFrameSize = 0;
 }
 
 VEAudioDecoder::~VEAudioDecoder()
@@ -19,42 +17,25 @@ int VEAudioDecoder::init(VEMediaInfo *info)
     }
 
     // 根据音频编码格式初始化解码器
-    const AVCodec *codec = avcodec_find_decoder(info->audio_codec_id);
+    const AVCodec *codec = avcodec_find_decoder(info->mAudioCodecParams->codec_id);
     if (codec == nullptr) {
         return -1;
     }
 
     // 创建解码器上下文
-    mVideoCtx = avcodec_alloc_context3(codec);
-    if (mVideoCtx == nullptr) {
+    mAudioCtx = avcodec_alloc_context3(codec);
+    if (mAudioCtx == nullptr) {
         return -1;
     }
 
     // 设置解码器参数
-    avcodec_parameters_to_context(mVideoCtx, info->audio_param);
+    avcodec_parameters_to_context(mAudioCtx, info->mAudioCodecParams);
 
     // 打开解码器
-    if (avcodec_open2(mVideoCtx, codec, nullptr) != 0) {
+    if (avcodec_open2(mAudioCtx, codec, nullptr) != 0) {
         return -1;
     }
 
-    // 分配音频帧缓冲区
-    mFrameSize = av_samples_get_buffer_size(
-        nullptr,
-        mVideoCtx->channels,
-        mVideoCtx->sample_rate,
-        mVideoCtx->sample_fmt,
-        1);
-    mFrame = av_frame_alloc();
-    if (mFrame == nullptr) {
-        return -1;
-    }
-
-    // 设置音频帧数据大小
-    mFrame->nb_samples = mVideoCtx->frame_size;
-    mFrame->format = mVideoCtx->sample_fmt;
-    mFrame->channels = mVideoCtx->channels;
-    mFrame->sample_rate = mVideoCtx->sample_rate;
     return 0;
 }
 
@@ -77,7 +58,7 @@ int VEAudioDecoder::sendPacket(VEPacket *pack)
     }
 
     // 将音频包送入解码器
-    return avcodec_send_packet(mVideoCtx, pack->data);
+    return avcodec_send_packet(mAudioCtx, pack->frame);
 
 }
 
@@ -88,16 +69,12 @@ int VEAudioDecoder::readFrame(VEFrame *frame)
     }
 
     // 从解码器中读取音频帧
-    int ret = avcodec_receive_frame(mVideoCtx, frame->data);
+    int ret = avcodec_receive_frame(mAudioCtx, frame->frame);
     if (ret == AVERROR(EAGAIN)) {
         return 0;
     } else if (ret < 0) {
         return -1;
     }
-
-    // 设置音频帧参数
-    frame->pts = av_frame_get_best_effort_timestamp(frame->data);
-    frame->dts = av_frame_get_best_effort_dts(frame->data);
 
     return 0;
 }

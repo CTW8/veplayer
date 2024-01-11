@@ -16,10 +16,21 @@ typedef struct __VEMediaInfo{
     int sampleFormat;
 
     AVCodecParameters *mAudioCodecParams;
+    int audio_stream_index=0;
+    AVRational mAudioTimeBase;
+    int64_t mAStartTime=0;
+
     AVCodecParameters *mVideoCodecParams;
+    int video_stream_index=0;
+    AVRational mVideoTimeBase;
+    int64_t mVStartTime=0;
 
 }VEMediaInfo;
 
+
+typedef enum _MediaState{
+    
+};
 
 
 #endif

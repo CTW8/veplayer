@@ -1,61 +1,84 @@
 #ifndef __VEPLAYER__
 #define __VEPLAYER__
 
-#include<string>
-
-class VEPlayer{
-    public:
+#include <string>
+#include "VEDemux.h"
+#include "VEAudioDecoder.h"
+#include "VEVideoDecoder.h"
+#include "VEPacket.h"
+#include "VEFrame.h"
+#include "VEPacketQueue.h"
+#include "VEFrameQueue.h"
+#include "VEResult.h"
+class VEPlayer
+{
+public:
     VEPlayer();
     ~VEPlayer();
 
-    ///setDataSource
+    /// setDataSource
     int setDataSource(std::string path);
 
-    ///prepare
+    /// prepare
     int prepare();
 
-    ///start
+    /// start
     int start();
 
-    ///stop
+    /// stop
     int stop();
 
-    ///pause
+    /// pause
     int pause();
 
-    ///resume
+    /// resume
     int resume();
 
-    ///release
+    /// release
     int release();
 
-    ///reset
+    /// seekTo
+    int seek(int64_t timestamp);
+
+    /// reset
     int reset();
 
-    ///setLooping
+    /// setLooping
 
-    ///isLooping
+    /// isLooping
 
-    ///getCurrentPosition
+    /// getCurrentPosition
 
-    ///getDuration
+    /// getDuration
 
-    ///setDisplay
+    /// setDisplay
 
-    ///setVolume
+    /// setVolume
 
-    ///getTrackInfo
+    /// getTrackInfo
 
-    ///setPlaybackParams
+    /// setPlaybackParams
 
-    ///setOnCompletionListener
+    // int setOnCompletionListener(std::function)
 
-    ///setOnErrorListener
+    /// setOnErrorListener
 
-    ///setOnSeekCompleteListener
+    /// setOnSeekCompleteListener
 
-    private:
+private:
+    pthread_mutex_t mMutex = PTHREAD_MUTEX_INITIALIZER;
+    VEDemux *mDemux = nullptr;
+    VEAudioDecoder *mAudioDecoder = nullptr;
+    VEVideoDecoder *mVideoDecoder = nullptr;
+    VEPacketQueue *mAPacketQueue=nullptr;
+    VEPacketQueue *mVPacketQueue=nullptr;
 
+    VEFrameQueue *mAFrameQueue=nullptr;
+    VEFrameQueue *mVFrameQueue=nullptr;
+
+    shared_ptr<VEMediaInfo> mMediaInfo=nullptr;
+
+    string mPath;
 };
 
 #endif

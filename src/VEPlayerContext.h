@@ -3,11 +3,13 @@
 
 class VEPlayerContext
 {
-private:
-    /* data */
+
 public:
     VEPlayerContext(/* args */);
     ~VEPlayerContext();
+
+private:
+
 };
 
 #endif

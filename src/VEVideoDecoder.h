@@ -3,6 +3,8 @@
 
 #include<memory>
 #include"VEMediaDef.h"
+#include"VEPacket.h"
+#include"VEFrame.h"
 extern "C"
 {
     #include "libavformat/avformat.h"
@@ -31,6 +33,7 @@ public:
     ///decodeFrame
     int readFrame(VEFrame *frame);
     ///uninit
+    int uninit();
 private:
     /* data */
     AVCodecContext * mVideoCtx=nullptr;

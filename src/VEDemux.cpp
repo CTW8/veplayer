@@ -43,8 +43,11 @@ int VEDemux::open(std::string file)
     ///获取文件信息
     for (unsigned int i = 0; i < mFormatContext->nb_streams; i++) {
         AVStream* stream = mFormatContext->streams[i];
+        
         if(stream->codecpar->codec_type == AVMEDIA_TYPE_AUDIO){
             mAudio_index = i;
+            mAudioTimeBase = stream->time_base;
+            mAStartTime = stream->start_time;
             mAudioCodecParams = avcodec_parameters_alloc();
             avcodec_parameters_copy(mAudioCodecParams,stream->codecpar);
             mChannel = mAudioCodecParams->channels;
@@ -52,6 +55,8 @@ int VEDemux::open(std::string file)
             mSampleRate = mAudioCodecParams->sample_rate;
         }else if(stream->codecpar->codec_type == AVMEDIA_TYPE_VIDEO){
             mVideo_index = i;
+            mVideoTimeBase = stream->time_base;
+            mVStartTime = stream->start_time;
             mVideoCodecParams = avcodec_parameters_alloc();
             avcodec_parameters_copy(mVideoCodecParams,stream->codecpar);
             mWidth = mVideoCodecParams->width;
@@ -63,16 +68,17 @@ int VEDemux::open(std::string file)
     return 0;
 }
 
-int VEDemux::read(VEPacket *packet)
-{
-    AVPacket frame;
-    av_init_packet(&frame);
-
-    if(av_read_frame(mFormatContext, &frame) <0){
-
+int32_t VEDemux::read(VEPacket *packet){
+    if(av_read_frame(mFormatContext, packet->frame) <0){
         return -1;
     }
-    av_packet_ref(packet,&frame);
+    if(packet->frame->stream_index == mAudio_index){
+        packet->type = 1;
+    }else if (packet->frame->stream_index = mVideo_index)
+    {
+        packet->type = 0;
+    }
+    
     return 0;
 }
 
@@ -84,7 +90,7 @@ int VEDemux::seek(uint64_t pos)
     }
 
     int64_t seekTarget = av_rescale_q(pos, AV_TIME_BASE_Q, mFormatContext->streams[0]->time_base);
-
+    
     if (av_seek_frame(mFormatContext, -1, seekTarget, AVSEEK_FLAG_BACKWARD) < 0) {
         fprintf(stderr, "Error: Couldn't seek.\n");
         return -1;
@@ -124,5 +130,11 @@ shared_ptr<VEMediaInfo> VEDemux::getFileInfo()
     tmp->sampleFormat = mSampleFormat;
     tmp->mAudioCodecParams = mAudioCodecParams;
     tmp->mVideoCodecParams = mVideoCodecParams;
+    tmp->audio_stream_index = mAudio_index;
+    tmp->video_stream_index = mVideo_index;
+    tmp->mAStartTime = mAStartTime;
+    tmp->mAudioTimeBase = mAudioTimeBase;
+    tmp->mVideoTimeBase = mVideoTimeBase;
+    tmp->mVStartTime = mVStartTime;
     return tmp;
 }

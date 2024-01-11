@@ -3,7 +3,6 @@
 
 #include<string>
 #include<memory>
-#include"VEMediaDef.h"
 
 extern "C"
 {
@@ -13,9 +12,13 @@ extern "C"
     #include "libavutil/timestamp.h"
 }
 
+#include"VEMediaDef.h"
+#include"VEPacket.h"
+#include"VEFrame.h"
+
 class VEAudioDecoder{
 public:
-    VEAudioDecoder(/* args */);
+    VEAudioDecoder();
     ~VEAudioDecoder();
 
     ///init
@@ -33,14 +36,9 @@ public:
     int uninit();
 private:
     /* data */
-    AVCodecContext * mVideoCtx=nullptr;
+    AVCodecContext * mAudioCtx=nullptr;
     VEMediaInfo * mMediaInfo=nullptr;
 
-        // 音频帧缓冲区
-    AVFrame *mFrame = nullptr;
-
-    // 音频帧数据大小
-    int mFrameSize = 0;
-}
+};
 
 #endif
